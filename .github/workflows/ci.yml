@@ -32,8 +32,14 @@ jobs:
             ${{ runner.os }}-maven-
 
       # 🧪 Step 4: Build and test Spring Boot backend
-      - name: Build & Test Backend
+      - name: Build Spring Boot Backend
         run: mvn clean package -DskipTests
+# 🌐 Step 9: Build Frontend (React)
+      - name: Build Frontend
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
 
       # 🌐 Step 5: Set up Node.js for frontend
       - name: Setup Node.js
@@ -54,10 +60,11 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: aop-build-artifacts
+          name: security-aop-build
           path: |
             target/*.jar
             frontend/dist
+
 
       # ✅ Step 8: Verify successful build
       - name: Show Success
