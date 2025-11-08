@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Security AOP</title>
+
+  <!-- ✅ Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #007bff, #6610f2);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: "Poppins", sans-serif;
+    }
+
+    .login-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      padding: 30px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-card h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .btn-primary {
+      width: 100%;
+      font-weight: 500;
+    }
+
+    .alert {
+      margin-top: 10px;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-card">
+    <h3>🔐 Security AOP Login</h3>
+
+    <!-- ✅ Alert message placeholder -->
+    <div id="msg"></div>
+
+    <form id="loginForm">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          placeholder="Enter your email"
+          required
+        />
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          placeholder="Enter your password"
+          required
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+  </div>
+
+  <footer>© 2025 Security-AOP Project</footer>
+
+  <!-- ✅ Full JS logic -->
+  <script>
+    // 🔁 Auto redirect if already logged in
+    const existingToken = localStorage.getItem("token");
+    const existingRole = localStorage.getItem("role");
+
+    if (existingToken && existingRole) {
+      if (existingRole.toUpperCase() === "ADMIN")
+        location.href = "/dashboard-new.html";
+      else location.href = "/profile-new.html";
+    }
+
+    // ✅ Login Form Logic
+    const form = document.getElementById("loginForm");
+    const msg = document.getElementById("msg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      msg.innerHTML = `<div class="text-muted text-center">Authenticating...</div>`;
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        msg.innerHTML = `<div class="alert alert-warning text-center">Please enter both email and password.</div>`;
+        return;
+      }
+
+      try {
+        const resp = await fetch("/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        let data;
+        try {
+          data = await resp.json();
+        } catch {
+          throw new Error("Invalid response from server.");
+        }
+
+        if (resp.ok && data.token) {
+          // ✅ Store token & role
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("email", data.email || email);
+          localStorage.setItem("role", data.role || "USER");
+
+          msg.innerHTML = `<div class="alert alert-success text-center">Welcome ${data.role || "User"}! Redirecting...</div>`;
+
+          setTimeout(() => {
+            if ((data.role || "").toUpperCase() === "ADMIN")
+              location.href = "/dashboard-new.html";
+            else location.href = "/profile-new.html";
+          }, 800);
+        } else {
+          msg.innerHTML = `<div class="alert alert-danger text-center">${
+            data.message || "Invalid credentials. Please try again."
+          }</div>`;
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        msg.innerHTML = `<div class="alert alert-danger text-center">Server not reachable. Please try again later.</div>`;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">Security Logs Dashboard</h2>
+    <table id="logsTable">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Action</th>
+                <th>Level</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/admin/securityLogs');
+                const logs = await response.json();
+
+                const tbody = document.querySelector('#logsTable tbody');
+                tbody.innerHTML = '';
+
+                logs.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${log.email}</td><td>${log.action}</td><td>${log.level}</td>`;
+                    tbody.appendChild(row);
+                });
+            } catch (err) {
+                console.error('Error fetching logs:', err);
+            }
+        }
+
+        // Fetch logs every 5 seconds
+        fetchLogs();
+        setInterval(fetchLogs, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f8fafc; padding:30px; }
+    h1 { color:#1e293b; }
+    .box { background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 10px #0001; max-width:400px; }
+    label { display:block; margin:10px 0 5px; font-weight:bold; }
+    input { width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; }
+    button { margin-top:15px; padding:10px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+    button.primary { background:#6366f1; color:white; }
+    button.secondary { background:#ef4444; color:white; }
+    .message { margin-top:15px; padding:10px; border-radius:8px; display:none; }
+    .message.success { display:block; background:#16a34a22; border:1px solid #16a34a66; color:#065f46; }
+    .message.error { display:block; background:#ef444422; border:1px solid #ef444466; color:#7f1d1d; }
+  </style>
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+
+  <div class="box">
+    <h2>Delete User</h2>
+    <label for="email">User Email</label>
+    <input type="email" id="email" placeholder="user@example.com" />
+    <button class="primary" onclick="deleteUser()">Delete</button>
+    <div id="msg" class="message"></div>
+  </div>
+
+  <button class="secondary" style="margin-top:20px" onclick="logout()">Logout</button>
+
+  <script>
+    async function deleteUser() {
+      const email = document.getElementById("email").value.trim();
+      const msg = document.getElementById("msg");
+      msg.style.display = "none";
+
+      if (!email) {
+        msg.textContent = "Please enter an email.";
+        msg.className = "message error";
+        return;
+      }
+
+      try {
+        const resp = await fetch(`/admin/deleteUser?email=${encodeURIComponent(email)}`, {
+          method: "POST"
+        });
+
+        const text = await resp.text();
+        if (resp.ok) {
+          msg.textContent = text;
+          msg.className = "message success";
+        } else {
+          msg.textContent = text || "Error deleting user";
+          msg.className = "message error";
+        }
+      } catch (err) {
+        msg.textContent = "Server error: " + err;
+        msg.className = "message error";
+      }
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST' });
+      window.location.href = "/login.html";
+    }
+  </script>
+</body>
+</html>

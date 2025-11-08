@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login • Security AOP Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* your existing styles... */
+    body{margin:0;font-family:Inter, sans-serif;display:grid;place-items:center;height:100vh;background:#0f172a;color:#e5e7eb}
+    .card{background:#1e293b;padding:24px;border-radius:12px;width:350px;box-shadow:0 8px 30px #0008}
+    label{display:block;margin:8px 0 4px}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff}
+    button{width:100%;padding:12px;margin-top:16px;border:none;border-radius:8px;background:#6366f1;color:#fff;font-weight:600;cursor:pointer}
+    button:hover{filter:brightness(1.1)}
+    .message{margin-top:10px;padding:8px;border-radius:8px;display:none}
+    .message.error{display:block;background:#ef444422;color:#fecaca}
+    .message.success{display:block;background:#16a34a22;color:#bbf7d0}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" required />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="••••••••" required />
+
+      <button type="submit">Sign in</button>
+      <div id="msg" class="message"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.style.display = "none";
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      try {
+        const resp = await fetch('/auth/login', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ email, password })
+        });
+
+        if (resp.ok) {
+          const text = await resp.text();
+          msg.textContent = text;
+          msg.className = "message success";
+
+          // Example: "Login OK: admin@example.com"
+          if (text.includes("admin")) {
+            setTimeout(() => window.location.href = "/admin.html", 1000);
+          } else {
+            setTimeout(() => window.location.href = "/user.html", 1000);
+          }
+        } else {
+          const error = await resp.text();
+          msg.textContent = error || "Login failed";
+          msg.className = "message error";
+        }
+      } catch (err) {
+        msg.textContent = "Server error: " + err;
+        msg.className = "message error";
+      }
+    });
+  </script>
+</body>
+</html>

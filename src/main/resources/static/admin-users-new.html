@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>User Management • Security AOP Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h2 class="text-center mb-4">👥 User Management</h2>
+    <div id="msg"></div>
+
+    <table class="table table-striped table-hover align-middle">
+      <thead class="table-dark text-center">
+        <tr><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="userTable">
+        <tr><td colspan="4" class="text-center text-muted">Loading users...</td></tr>
+      </tbody>
+    </table>
+
+    <div class="text-center">
+      <a href="/dashboard-new.html" class="btn btn-secondary">⬅ Back to Dashboard</a>
+      <button class="btn btn-outline-primary ms-2" onclick="loadUsers()">🔁 Refresh</button>
+    </div>
+  </div>
+
+  <script>
+    const tableBody = document.getElementById('userTable');
+    const msg = document.getElementById('msg');
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/admin/users');
+        if (!res.ok) throw new Error('Access denied or session expired');
+        const users = await res.json();
+        if (!users.length) {
+          tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No users found</td></tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = users.map(u => `
+          <tr>
+            <td>${u.email}</td>
+            <td>${u.role}</td>
+            <td>${u.active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>'}</td>
+            <td>
+              <button class="btn btn-sm btn-danger me-1" onclick="deleteUser('${u.email}')">Delete</button>
+              <button class="btn btn-sm btn-info me-1" onclick="updateRole('${u.email}', '${u.role}')">Update Role</button>
+              <button class="btn btn-sm btn-warning" onclick="toggleActive('${u.email}', ${!u.active})">
+                ${u.active ? 'Deactivate' : 'Activate'}
+              </button>
+            </td>
+          </tr>`).join('');
+      } catch (err) {
+        tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    async function deleteUser(email) {
+      if (!confirm(`Delete user ${email}?`)) return;
+      const res = await fetch(`/admin/deleteUser?email=${encodeURIComponent(email)}`, {method: 'POST'});
+      const t = await res.text();
+      msg.innerHTML = `<div class="alert ${res.ok ? 'alert-success' : 'alert-danger'}">${t}</div>`;
+      loadUsers();
+    }
+
+    async function updateRole(email, currentRole) {
+      const newRole = prompt(`Enter new role for ${email} (ADMIN or USER):`, currentRole);
+      if (!newRole) return;
+      const res = await fetch(`/admin/updateRole?email=${encodeURIComponent(email)}&role=${encodeURIComponent(newRole)}`, {method: 'POST'});
+      msg.innerHTML = `<div class="alert ${res.ok ? 'alert-success' : 'alert-danger'}">${await res.text()}</div>`;
+      loadUsers();
+    }
+
+    async function toggleActive(email, active) {
+      const res = await fetch(`/admin/setActive?email=${encodeURIComponent(email)}&active=${active}`, {method: 'POST'});
+      msg.innerHTML = `<div class="alert ${res.ok ? 'alert-success' : 'alert-danger'}">${await res.text()}</div>`;
+      loadUsers();
+    }
+
+    // Load users when page opens
+    document.addEventListener('DOMContentLoaded', loadUsers);
+  </script>
+</body>
+</html>

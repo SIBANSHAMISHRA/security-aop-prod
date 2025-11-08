@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aop-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/aopdb
+      SPRING_DATASOURCE_USERNAME: aopuser
+      SPRING_DATASOURCE_PASSWORD: aoppass
+
+  frontend:
+    build:
+      context: ../aop-frontend
+      dockerfile: Dockerfile
+    container_name: aop-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: aopuser
+      POSTGRES_PASSWORD: aoppass
+      POSTGRES_DB: aopdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

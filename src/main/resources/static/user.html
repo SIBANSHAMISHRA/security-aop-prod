@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>User Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f9fafb; padding:30px; }
+    h1 { color:#1f2937; }
+    .box { background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 12px #0001; max-width:420px; }
+    .label { font-weight:bold; margin-top:10px; }
+    .value { margin-bottom:10px; }
+    button { margin-top:20px; padding:10px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; background:#ef4444; color:white; }
+    .error { margin-top:12px; padding:10px; background:#fecaca; border:1px solid #ef4444; border-radius:8px; color:#7f1d1d; display:none; }
+  </style>
+</head>
+<body>
+  <h1>User Dashboard</h1>
+
+  <div class="box">
+    <div class="label">Email:</div>
+    <div id="email" class="value">Loading...</div>
+
+    <div class="label">Role:</div>
+    <div id="role" class="value">Loading...</div>
+
+    <button onclick="logout()">Logout</button>
+    <div id="error" class="error"></div>
+  </div>
+
+  <script>
+    async function fetchProfile() {
+      const errorBox = document.getElementById("error");
+      errorBox.style.display = "none";
+
+      try {
+        const resp = await fetch("/auth/me");
+        if (!resp.ok) {
+          throw new Error("Unauthorized or session expired");
+        }
+
+        const user = await resp.json();
+        document.getElementById("email").textContent = user.email;
+        document.getElementById("role").textContent = user.role;
+      } catch (err) {
+        errorBox.textContent = err.message;
+        errorBox.style.display = "block";
+      }
+    }
+
+    async function logout() {
+      await fetch("/auth/logout", { method: "POST" });
+      window.location.href = "/login.html";
+    }
+
+    // Run on page load
+    fetchProfile();
+  </script>
+</body>
+</html>
